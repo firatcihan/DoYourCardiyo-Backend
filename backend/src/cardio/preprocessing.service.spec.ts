@@ -38,10 +38,19 @@ describe('PreprocessingService', () => {
   });
 
   it('should return a grayscale image', async () => {
-    const input = await createTestJpeg();
+    // Create a clearly coloured input (red), verify output pixels have R≈G≈B
+    const input = await sharp({
+      create: { width: 10, height: 10, channels: 3, background: { r: 200, g: 50, b: 50 } },
+    })
+      .jpeg()
+      .toBuffer();
     const result = await service.process(input);
-    const metadata = await sharp(result).metadata();
-    expect(metadata.channels).toBe(1);
+    const { data } = await sharp(result).raw().toBuffer({ resolveWithObject: true });
+    // In a grayscale JPEG decoded as RGB, R≈G≈B for every pixel
+    for (let i = 0; i < data.length; i += 3) {
+      expect(Math.abs(data[i] - data[i + 1])).toBeLessThanOrEqual(2);
+      expect(Math.abs(data[i] - data[i + 2])).toBeLessThanOrEqual(2);
+    }
   });
 
   it('should resize large images to fit within 800x800', async () => {
