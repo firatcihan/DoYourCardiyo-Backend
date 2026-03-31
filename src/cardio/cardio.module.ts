@@ -4,6 +4,7 @@ import { GoogleGenerativeAI, Schema, SchemaType } from '@google/generative-ai';
 import { CardioController } from './cardio.controller';
 import { PreprocessingService } from './preprocessing.service';
 import { GeminiService } from './gemini.service';
+import { DebugImageService } from './debug-image.service';
 
 const responseSchema: Schema = {
   type: SchemaType.OBJECT,
@@ -28,6 +29,7 @@ const responseSchema: Schema = {
   providers: [
     PreprocessingService,
     GeminiService,
+    DebugImageService,
     {
       provide: 'GEMINI_MODEL',
       useFactory: (config: ConfigService) => {

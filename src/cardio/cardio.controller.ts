@@ -12,6 +12,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PreprocessingService } from './preprocessing.service';
 import { GeminiService } from './gemini.service';
+import { DebugImageService } from './debug-image.service';
 import { AnalyzeResponseDto } from './dto/analyze-response.dto';
 
 @Controller('cardio')
@@ -19,11 +20,14 @@ export class CardioController {
   constructor(
     private readonly preprocessingService: PreprocessingService,
     private readonly geminiService: GeminiService,
+    private readonly debugImageService: DebugImageService,
   ) {}
 
   @Post('analyze')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: 10 * 1024 * 1024 } }))
+  @UseInterceptors(
+    FileInterceptor('image', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
   async analyze(
     @UploadedFile(
       new ParseFilePipe({
@@ -35,7 +39,10 @@ export class CardioController {
     )
     file: Express.Multer.File,
   ): Promise<AnalyzeResponseDto> {
-    const processedBuffer = await this.preprocessingService.process(file.buffer);
+    const processedBuffer = await this.preprocessingService.process(
+      file.buffer,
+    );
+    await this.debugImageService.save(processedBuffer);
     return this.geminiService.analyze(processedBuffer);
   }
 }
