@@ -5,11 +5,12 @@ import sharp from 'sharp';
 export class PreprocessingService {
   async process(imageBuffer: Buffer): Promise<Buffer> {
     return sharp(imageBuffer)
-      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+      .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
       .grayscale()
-      .sharpen({ sigma: 1.5 })
+      .linear(1.3, -30)
+      .sharpen({ sigma: 2.0 })
       .normalise()
-      .jpeg({ quality: 85 })
+      .jpeg({ quality: 90 })
       .toBuffer();
   }
 }

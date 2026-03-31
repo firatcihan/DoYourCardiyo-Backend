@@ -20,6 +20,7 @@ const responseSchema: Schema = {
     },
     distance: { type: SchemaType.NUMBER, description: 'Distance covered' },
     unit: { type: SchemaType.STRING, format: 'enum', enum: ['km', 'miles'] },
+    floors: { type: SchemaType.NUMBER, description: 'Floors climbed (stairmaster)' },
   },
   required: ['readable'],
 };

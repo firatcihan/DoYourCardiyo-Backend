@@ -53,12 +53,12 @@ describe('PreprocessingService', () => {
     }
   });
 
-  it('should resize large images to fit within 800x800', async () => {
+  it('should resize large images to fit within 1200x1200', async () => {
     const input = await createTestJpeg(2000, 1500);
     const result = await service.process(input);
     const metadata = await sharp(result).metadata();
-    expect(metadata.width).toBeLessThanOrEqual(800);
-    expect(metadata.height).toBeLessThanOrEqual(800);
+    expect(metadata.width).toBeLessThanOrEqual(1200);
+    expect(metadata.height).toBeLessThanOrEqual(1200);
   });
 
   it('should not upscale small images', async () => {
