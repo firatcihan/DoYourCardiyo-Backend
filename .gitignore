@@ -5,3 +5,4 @@ dist/
 *.log
 .superpowers/
 .yarn/install-state.gz
+debug-images/
