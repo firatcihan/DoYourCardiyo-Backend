@@ -9,8 +9,14 @@ const responseSchema = {
   type: SchemaType.OBJECT,
   properties: {
     readable: { type: SchemaType.BOOLEAN },
-    duration: { type: SchemaType.NUMBER, description: 'Workout duration in minutes' },
-    calories: { type: SchemaType.NUMBER, description: 'Calories burned in kcal' },
+    duration: {
+      type: SchemaType.NUMBER,
+      description: 'Workout duration in minutes',
+    },
+    calories: {
+      type: SchemaType.NUMBER,
+      description: 'Calories burned in kcal',
+    },
     distance: { type: SchemaType.NUMBER, description: 'Distance covered' },
     unit: { type: SchemaType.STRING, enum: ['km', 'miles'] },
   },
