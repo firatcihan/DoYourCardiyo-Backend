@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { GoogleGenerativeAI, Schema, SchemaType } from '@google/generative-ai';
 import { CardioController } from './cardio.controller';
 import { PreprocessingService } from './preprocessing.service';
 import { GeminiService } from './gemini.service';
 
-const responseSchema = {
+const responseSchema: Schema = {
   type: SchemaType.OBJECT,
   properties: {
     readable: { type: SchemaType.BOOLEAN },
@@ -18,7 +18,7 @@ const responseSchema = {
       description: 'Calories burned in kcal',
     },
     distance: { type: SchemaType.NUMBER, description: 'Distance covered' },
-    unit: { type: SchemaType.STRING, enum: ['km', 'miles'] },
+    unit: { type: SchemaType.STRING, format: 'enum', enum: ['km', 'miles'] },
   },
   required: ['readable'],
 };
