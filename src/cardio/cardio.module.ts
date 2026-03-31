@@ -20,7 +20,10 @@ const responseSchema: Schema = {
     },
     distance: { type: SchemaType.NUMBER, description: 'Distance covered' },
     unit: { type: SchemaType.STRING, format: 'enum', enum: ['km', 'miles'] },
-    floors: { type: SchemaType.NUMBER, description: 'Floors climbed (stairmaster)' },
+    floors: {
+      type: SchemaType.NUMBER,
+      description: 'Floors climbed (stairmaster)',
+    },
   },
   required: ['readable'],
 };
@@ -37,7 +40,7 @@ const responseSchema: Schema = {
         const apiKey = config.getOrThrow<string>('gemini.apiKey');
         const genAI = new GoogleGenerativeAI(apiKey);
         return genAI.getGenerativeModel({
-          model: 'gemini-2.0-flash',
+          model: 'gemini-2.5-flash',
           generationConfig: {
             responseMimeType: 'application/json',
             responseSchema,
