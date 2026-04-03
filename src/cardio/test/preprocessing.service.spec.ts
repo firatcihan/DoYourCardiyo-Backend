@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PreprocessingService } from './preprocessing.service';
+import { PreprocessingService } from '../preprocessing.service';
 import sharp from 'sharp';
 
 async function createTestJpeg(width = 100, height = 100): Promise<Buffer> {

@@ -1,7 +1,7 @@
 // backend/src/cardio/gemini.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnprocessableEntityException, InternalServerErrorException } from '@nestjs/common';
-import { GeminiService } from './gemini.service';
+import { GeminiService } from '../gemini.service';
 
 describe('GeminiService', () => {
   let service: GeminiService;

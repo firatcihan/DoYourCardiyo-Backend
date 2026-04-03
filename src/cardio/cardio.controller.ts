@@ -14,6 +14,7 @@ import { PreprocessingService } from './preprocessing.service';
 import { GeminiService } from './gemini.service';
 import { DebugImageService } from './debug-image.service';
 import { AnalyzeResponseDto } from './dto/analyze-response.dto';
+import { ThrottleAI } from '../common/throttler/throttle-profiles.decorator';
 
 @Controller('cardio')
 export class CardioController {
@@ -24,6 +25,7 @@ export class CardioController {
   ) {}
 
   @Post('analyze')
+  @ThrottleAI()
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
     FileInterceptor('image', { limits: { fileSize: 10 * 1024 * 1024 } }),

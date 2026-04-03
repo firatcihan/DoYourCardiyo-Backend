@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { Readable } from 'stream';
-import { CardioController } from './cardio.controller';
-import { PreprocessingService } from './preprocessing.service';
-import { GeminiService } from './gemini.service';
-import { DebugImageService } from './debug-image.service';
-import { AnalyzeResponseDto } from './dto/analyze-response.dto';
+import { CardioController } from '../cardio.controller';
+import { PreprocessingService } from '../preprocessing.service';
+import { GeminiService } from '../gemini.service';
+import { DebugImageService } from '../debug-image.service';
+import { AnalyzeResponseDto } from '../dto/analyze-response.dto';
 
 const mockFile = (
   overrides: Partial<Express.Multer.File> = {},

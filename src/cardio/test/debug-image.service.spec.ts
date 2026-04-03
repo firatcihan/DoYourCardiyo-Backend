@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DebugImageService } from './debug-image.service';
+import { DebugImageService } from '../debug-image.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
