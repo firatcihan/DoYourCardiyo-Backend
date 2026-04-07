@@ -3,11 +3,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import sharp from 'sharp';
+import type { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 
 async function createTestJpeg(): Promise<Buffer> {
   return sharp({
-    create: { width: 400, height: 300, channels: 3, background: { r: 40, g: 40, b: 40 } },
+    create: {
+      width: 400,
+      height: 300,
+      channels: 3,
+      background: { r: 40, g: 40, b: 40 },
+    },
   })
     .jpeg()
     .toBuffer();
@@ -45,33 +51,46 @@ describe('CardioController (e2e)', () => {
       unit: 'km',
     });
 
-    const response = await request(app.getHttpServer())
+    const response = await request(app.getHttpServer() as App)
       .post('/cardio/analyze')
-      .attach('image', imageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+      .attach('image', imageBuffer, {
+        filename: 'test.jpg',
+        contentType: 'image/jpeg',
+      });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ duration: 30, calories: 250, distance: 3.5, unit: 'km' });
+    expect(response.body).toEqual({
+      duration: 30,
+      calories: 250,
+      distance: 3.5,
+      unit: 'km',
+    });
     await app.close();
   });
 
   it('POST /cardio/analyze returns 422 when image is unreadable', async () => {
     const app = await buildApp({ readable: false });
 
-    const response = await request(app.getHttpServer())
+    const response = await request(app.getHttpServer() as App)
       .post('/cardio/analyze')
-      .attach('image', imageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+      .attach('image', imageBuffer, {
+        filename: 'test.jpg',
+        contentType: 'image/jpeg',
+      });
 
     expect(response.status).toBe(422);
-    expect(response.body.message).toBe('Fotoğraf okunamadı');
-    expect(response.body.code).toBe('UNREADABLE_IMAGE');
+    const body = response.body as { message: string; code: string };
+    expect(body.message).toBe('Fotoğraf okunamadı');
+    expect(body.code).toBe('UNREADABLE_IMAGE');
     await app.close();
   });
 
   it('POST /cardio/analyze returns 400 when no file is attached', async () => {
     const app = await buildApp({ readable: true });
 
-    const response = await request(app.getHttpServer())
-      .post('/cardio/analyze');
+    const response = await request(app.getHttpServer() as App).post(
+      '/cardio/analyze',
+    );
 
     expect(response.status).toBe(400);
     await app.close();

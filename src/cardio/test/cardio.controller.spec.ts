@@ -1,11 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnprocessableEntityException } from '@nestjs/common';
+import { getModelToken } from '@nestjs/mongoose';
 import { Readable } from 'stream';
 import { CardioController } from '../cardio.controller';
 import { PreprocessingService } from '../preprocessing.service';
 import { GeminiService } from '../gemini.service';
 import { DebugImageService } from '../debug-image.service';
-import { AnalyzeResponseDto } from '../dto/analyze-response.dto';
+import { CardioSession } from '../schemas/cardio-session.schema';
+import { ClerkAuthGuard } from '../../common/auth/clerk-auth.guard';
+import { DailyLimitGuard } from '../../common/auth/daily-limit.guard';
 
 const mockFile = (
   overrides: Partial<Express.Multer.File> = {},
@@ -28,12 +31,15 @@ describe('CardioController', () => {
   let preprocessingService: jest.Mocked<PreprocessingService>;
   let geminiService: jest.Mocked<GeminiService>;
 
-  const mockResult: AnalyzeResponseDto = {
+  const mockGeminiResult = {
     duration: 32,
     calories: 280,
     distance: 4.2,
-    unit: 'km',
+    unit: 'km' as const,
   };
+
+  const mockSessionId = '507f1f77bcf86cd799439011';
+  const mockCreatedAt = new Date('2026-04-06T12:00:00Z');
   const processedBuffer = Buffer.from('processed');
 
   beforeEach(async () => {
@@ -46,14 +52,28 @@ describe('CardioController', () => {
         },
         {
           provide: GeminiService,
-          useValue: { analyze: jest.fn().mockResolvedValue(mockResult) },
+          useValue: { analyze: jest.fn().mockResolvedValue(mockGeminiResult) },
         },
         {
           provide: DebugImageService,
           useValue: { save: jest.fn().mockResolvedValue(undefined) },
         },
+        {
+          provide: getModelToken(CardioSession.name),
+          useValue: {
+            create: jest.fn().mockResolvedValue({
+              _id: { toString: () => mockSessionId },
+              createdAt: mockCreatedAt,
+            }),
+          },
+        },
       ],
-    }).compile();
+    })
+      .overrideGuard(ClerkAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(DailyLimitGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<CardioController>(CardioController);
     preprocessingService = module.get(PreprocessingService);
@@ -65,19 +85,26 @@ describe('CardioController', () => {
   });
 
   it('should return AnalyzeResponseDto for a valid file', async () => {
-    const result = await controller.analyze(mockFile());
-    expect(result).toEqual(mockResult);
+    const result = await controller.analyze('test-user-id', mockFile());
+    expect(result).toEqual({
+      sessionId: mockSessionId,
+      duration: 32,
+      calories: 280,
+      distance: 4.2,
+      unit: 'km',
+      createdAt: mockCreatedAt,
+    });
   });
 
   it('should call PreprocessingService with the file buffer', async () => {
     const file = mockFile();
-    await controller.analyze(file);
+    await controller.analyze('test-user-id', file);
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(preprocessingService.process).toHaveBeenCalledWith(file.buffer);
   });
 
   it('should call GeminiService with the preprocessed buffer', async () => {
-    await controller.analyze(mockFile());
+    await controller.analyze('test-user-id', mockFile());
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(geminiService.analyze).toHaveBeenCalledWith(processedBuffer);
   });
@@ -89,8 +116,8 @@ describe('CardioController', () => {
         code: 'UNREADABLE_IMAGE',
       }),
     );
-    await expect(controller.analyze(mockFile())).rejects.toThrow(
-      UnprocessableEntityException,
-    );
+    await expect(
+      controller.analyze('test-user-id', mockFile()),
+    ).rejects.toThrow(UnprocessableEntityException);
   });
 });

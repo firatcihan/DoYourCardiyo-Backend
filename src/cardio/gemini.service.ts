@@ -7,7 +7,14 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import type { GenerativeModel } from '@google/generative-ai';
-import { AnalyzeResponseDto } from './dto/analyze-response.dto';
+/** Raw parsed data from Gemini (before DB persistence adds sessionId/createdAt) */
+export interface GeminiParsedResult {
+  duration: number;
+  calories: number;
+  distance?: number;
+  unit?: 'km' | 'miles';
+  floors?: number;
+}
 
 const PROMPT = `You are analyzing a photo of a cardio machine (treadmill, bike, stairmaster, elliptical).
 
@@ -39,9 +46,11 @@ interface GeminiResponse {
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
 
-  constructor(@Inject('GEMINI_MODEL') private readonly model: GenerativeModel) {}
+  constructor(
+    @Inject('GEMINI_MODEL') private readonly model: GenerativeModel,
+  ) {}
 
-  async analyze(imageBuffer: Buffer): Promise<AnalyzeResponseDto> {
+  async analyze(imageBuffer: Buffer): Promise<GeminiParsedResult> {
     const base64 = imageBuffer.toString('base64');
 
     try {
@@ -54,18 +63,14 @@ export class GeminiService {
       this.logger.debug(`Gemini raw response: ${rawText}`);
       const data = JSON.parse(rawText) as GeminiResponse;
 
-      if (
-        !data.readable ||
-        data.duration == null ||
-        data.calories == null
-      ) {
+      if (!data.readable || data.duration == null || data.calories == null) {
         throw new UnprocessableEntityException({
           message: 'Fotoğraf okunamadı',
           code: 'UNREADABLE_IMAGE',
         });
       }
 
-      const response: AnalyzeResponseDto = {
+      const response: GeminiParsedResult = {
         duration: data.duration,
         calories: data.calories,
       };
@@ -79,7 +84,10 @@ export class GeminiService {
       return response;
     } catch (error) {
       if (error instanceof UnprocessableEntityException) throw error;
-      this.logger.error('Gemini API error', error instanceof Error ? error.message : error);
+      this.logger.error(
+        'Gemini API error',
+        error instanceof Error ? error.message : error,
+      );
       throw new InternalServerErrorException('Gemini API hatası');
     }
   }

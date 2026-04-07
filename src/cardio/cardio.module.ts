@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { GoogleGenerativeAI, Schema, SchemaType } from '@google/generative-ai';
 import { CardioController } from './cardio.controller';
 import { PreprocessingService } from './preprocessing.service';
 import { GeminiService } from './gemini.service';
 import { DebugImageService } from './debug-image.service';
+import {
+  CardioSession,
+  CardioSessionSchema,
+} from './schemas/cardio-session.schema';
+import { DailyLimitGuard } from '../common/auth/daily-limit.guard';
 
 const responseSchema: Schema = {
   type: SchemaType.OBJECT,
@@ -29,11 +35,17 @@ const responseSchema: Schema = {
 };
 
 @Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: CardioSession.name, schema: CardioSessionSchema },
+    ]),
+  ],
   controllers: [CardioController],
   providers: [
     PreprocessingService,
     GeminiService,
     DebugImageService,
+    DailyLimitGuard,
     {
       provide: 'GEMINI_MODEL',
       useFactory: (config: ConfigService) => {
